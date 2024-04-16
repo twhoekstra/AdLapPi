@@ -13,6 +13,7 @@ def read_serial_thread(serial_port):
 
 def send_serial(serial_port, data):
     try:
+        print(f"Sent: {data}")
         serial_port.write(data.encode())
     except serial.SerialException as e:
         print("Serial error:", e)
