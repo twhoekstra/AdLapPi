@@ -1,13 +1,18 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 
-import serial, string
+import serial
+def read_serial_thread(serial_port):
+    while True:
+        try:
+            data = serial_port.readline().decode().strip()
+            if data:
+                print("Received:", data)
+        except serial.SerialException as e:
+            print("Serial error:", e)
+            break
 
-output = " "
-ser = serial.Serial('/dev/ttyUSB0', 4800, 8, 'N', 1, timeout=1)
-while True:
-  print("----")
-  while output:
-    output = ser.readline()
-    print(output)
-
-  output = " "
+def send_serial(serial_port, data):
+    try:
+        serial_port.write(data.encode())
+    except serial.SerialException as e:
+        print("Serial error:", e)
