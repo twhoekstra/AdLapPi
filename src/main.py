@@ -14,6 +14,7 @@ SPEED = 500
 # Serial port settings
 SERIAL_PORT = '/dev/ttyACM0'  # Change this to your serial port
 BAUD_RATE = 250000
+HOME_FIRST = False
 TIMEOUT = 1
 
 
@@ -76,6 +77,9 @@ def main():
     long_timer = Timer(100).start()
 
     print("Press 'q' to quit.")
+
+    if HOME_FIRST:
+        send_serial(ser, gcode.home())
 
     # Set axes to relative mode
     send_serial(ser, gcode.relative_positioning())
