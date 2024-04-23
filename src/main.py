@@ -1,13 +1,19 @@
 #  Copyright (c) 2024 Thijn Hoekstra
+import queue
 
-
+import evdev
 import serial
 import threading
 import time
 # import keyboard
 
 import gcode
+import controller
+from controller import ControllerPosition, ZEROPOSITION
+import serial_connection
 from serial_connection import read_serial_thread, send_serial
+
+
 
 SPEED = 500
 
@@ -17,27 +23,8 @@ BAUD_RATE = 250000
 HOME_FIRST = False
 TIMEOUT = 1
 
-
-# def keyboard_callback(key):
-#     # Send the key to the serial device
-#     if key.event_type == keyboard.KEY_DOWN:
-#         return gcode.move(x=20, speed=SPEED)
-#
-#     elif key.event_type == keyboard.KEY_UP:
-#         return gcode.move(x=-20, speed=SPEED)
-#     else:
-#         return None
-
-def timer_callback(key):
-    # Send the key to the serial device
-    if key.event_type == keyboard.KEY_DOWN:
-        return gcode.move(x=20, speed=SPEED)
-
-    elif key.event_type == keyboard.KEY_UP:
-        return gcode.move(x=-20, speed=SPEED)
-    else:
-        return None
-
+# Controller settings
+CONTROLLER_NAME = '/dev/input/event4'
 
 class Timer:
 
@@ -65,46 +52,51 @@ class Timer:
 # Main function
 def main():
     # Open serial port
-    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT)
 
-    # Start a thread to read data from the serial port
-    read_thread = threading.Thread(target=read_serial_thread, args=(ser,), daemon=True)
-    read_thread.start()
+    with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
 
-    time.sleep(5) # Give arms time to setup
+        # Start a thread to read data from the serial port
+        read_thread = threading.Thread(target=read_serial_thread,
+                                       args=(ser,),
+                                       daemon=True)
+        read_thread.start()
 
-    timer = Timer(5).start()
-    long_timer = Timer(100).start()
+        pos = ControllerPosition(0, 0)
+        dev = evdev.InputDevice(CONTROLLER_NAME)
+        ctrl_thread = threading.Thread(target=controller.controller_thread,
+                                       args=(dev, pos),
+                                       daemon=True)
+        ctrl_thread.start()
 
-    print("Press 'q' to quit.")
+        time.sleep(2) # Give arms time to setup
 
-    if HOME_FIRST:
-        send_serial(ser, gcode.home())
+        if HOME_FIRST:
+            send_serial(ser, gcode.home())
 
-    # Set axes to relative mode
-    send_serial(ser, gcode.relative_positioning())
+        # Set axes to relative mode
+        send_serial(ser, gcode.relative_positioning())
 
-    # Main loop to handle key presses
-    dir = 1
-    while True:
-        # if keyboard.is_pressed('q'):
-        #     print("Exiting...")
-        #     break
+        # Main loop to handle key presses
+        dir = 1
+        pos_prev = ZEROPOSITION
+        while True:
+            # if keyboard.is_pressed('q'):
+            #     print("Exiting...")
+            #     break
 
-        # Get the pressed key
-        # key = keyboard.read_event(suppress=True)
-        # action = keyboard_callback(key)
+            # Get the pressed key
+            # key = keyboard.read_event(suppress=True)
+            # action = keyboard_callback(key)
 
-        action = timer()
-        if action:
-            send_serial(ser, gcode.move(x=dir*10, speed=SPEED))
-            dir *= -1
+            v = pos.as_array()
+            v *= 1
+            v = v.round(3)
 
-        if long_timer():
-            break
+            if pos != ZEROPOSITION:
+                send_serial(ser, gcode.move(vector=v, order="xy", speed=SPEED))
 
-    # Close serial port
-    ser.close()
+            time.sleep(0.1)
+
 
 if __name__ == "__main__":
     main()

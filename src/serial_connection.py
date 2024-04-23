@@ -17,3 +17,6 @@ def send_serial(serial_port, data):
         serial_port.write(data.encode())
     except serial.SerialException as e:
         print("Serial error:", e)
+
+if __name__ == '__main__':
+    pass
