@@ -1,5 +1,6 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 
+import time
 import serial
 def read_serial_thread(serial_port):
     while True:
@@ -15,6 +16,7 @@ def send_serial(serial_port, data):
     try:
         print(f"Sent: {data}")
         serial_port.write(data.encode())
+        time.sleep(0.001)
     except serial.SerialException as e:
         print("Serial error:", e)
 

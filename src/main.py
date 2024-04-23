@@ -15,7 +15,7 @@ from serial_connection import read_serial_thread, send_serial
 
 
 
-SPEED = 500
+SPEED = 10000
 
 # Serial port settings
 SERIAL_PORT = '/dev/ttyACM0'  # Change this to your serial port
@@ -89,13 +89,14 @@ def main():
             # action = keyboard_callback(key)
 
             v = pos.as_array()
-            v *= 1
+            v *= 2
             v = v.round(3)
 
             if pos != ZEROPOSITION:
                 send_serial(ser, gcode.move(vector=v, order="xy", speed=SPEED))
+                send_serial(ser, gcode.relative_positioning())
 
-            time.sleep(0.1)
+            time.sleep(0.01)
 
 
 if __name__ == "__main__":

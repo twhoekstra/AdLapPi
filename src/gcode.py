@@ -35,13 +35,13 @@ def move(letter: str = "G", number: int = 0, **kwargs):
     s = f"{letter}{number} " + " ".join(
         f"{k.upper()}{v}" for k, v in kwargs.items())
 
-    return s
+    return s + "\n"
 
 def relative_positioning():
-    return "G91"
+    return "G91\n"
 
 def absolute_positioning():
-    return "G90"
+    return "G90\n"
 
 def home(axes: Union[list, str] = None):
     if axes is None:
@@ -50,6 +50,6 @@ def home(axes: Union[list, str] = None):
         axes = [axes]
 
     else:
-        return "G28 " + " ".join(a.upper() for a in axes)
+        return "G28 " + " ".join(a.upper() for a in axes) + "\n"
 
 
