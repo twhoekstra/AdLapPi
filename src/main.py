@@ -86,7 +86,7 @@ def main(debug=True):
     if HOME_FIRST:
         serial_connection.send_serials(arduinos, gcode.home())
 
-    if True:
+    if False:
         serial_connection.send_serials(arduinos, gcode.software_endstops())
     # Set axes to relative mode
     # serial_connection.send_serials(arduinos, gcode.relative_positioning())
