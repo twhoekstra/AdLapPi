@@ -20,7 +20,7 @@ STICK_MULTIPLIER = 0.5
 
 logger = logging.getLogger(__name__)
 
-SPEED = 5000
+SPEED = 10000
 
 # Serial port settings
 SERIAL_PORTS = ['/dev/ttyACM0', '/dev/ttyACM1']  # Change this to your serial port
@@ -93,18 +93,17 @@ def main(debug=True):
     s = np.zeros((2, 3))
     while True:
 
-        v = pos.as_array()
-        v *= STICK_MULTIPLIER
-        v = v.round(3)
-
-        s += v
-
         for armpos, arduino in zip(s, arduinos):
             if np.any(armpos != ZEROPOSITION):
                 send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
                 # send_serial(arduino, gcode.relative_positioning())
 
-            time.sleep(0.01)
+        v = pos.as_array()
+        pos.clear()
+        v *= STICK_MULTIPLIER
+        v = v.round(3)
+
+        s += v
 
 
 if __name__ == "__main__":

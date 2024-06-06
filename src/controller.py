@@ -44,11 +44,15 @@ class ControllerPosition:
     def as_array(self) -> np.ndarray:
         return np.vstack([self.left.as_array(), self.right.as_array()], dtype=np.float64)
 
-    def set(self, code, pos) -> None:
-        print(code)
+    def clear(self):
+        self.left.x = 0
+        self.left.y = 0
         self.left.z = 0
+        self.right.x = 0
+        self.right.y = 0
         self.right.z = 0
 
+    def set(self, code, pos) -> None:
         if code in STICK_CONTROLS:
             pos = (pos / STICK_MAX - 0.5) * 2
 
