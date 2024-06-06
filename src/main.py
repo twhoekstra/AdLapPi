@@ -93,7 +93,7 @@ def main(debug=True):
     s = np.zeros((2, 3))
     while True:
 
-        for armpos, arduino in zip(s, arduinos):
+        for armpos, arduino in zip(s.round(3), arduinos):
             if np.any(armpos != ZEROPOSITION):
                 send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
                 # send_serial(arduino, gcode.relative_positioning())
@@ -102,7 +102,7 @@ def main(debug=True):
         v = pos.as_array()
 
         v *= STICK_MULTIPLIER
-        v = v.round(3)
+        # v = v.round(3)
 
         s += v
 
