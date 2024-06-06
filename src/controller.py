@@ -1,52 +1,118 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 # Stick control code by Nick at https://stackoverflow.com/a/56419190
+import time
+import logging
+from typing import List
 
 import numpy as np
 import evdev
-from evdev.ecodes import ABS_X, ABS_Y, ABS_BRAKE
+from evdev import InputDevice
 
-CENTER_TOLERANCE = 10000
-STICK_MAX = 32768
+from evdev.ecodes import ABS_X, ABS_Y, ABS_Z, ABS_RZ, ABS_BRAKE, ABS_GAS, BTN_TL, BTN_TR
 
+TRIGGER_MAX = 1024
 
+TRIGGER_CONTROLS = [ABS_GAS, ABS_BRAKE]
+BUMPER_CONTROLS = [BTN_TL, BTN_TR]
+STICK_CONTROLS = [ABS_X, ABS_Y, ABS_Z, ABS_RZ]
 
-center = {
-    ABS_X: 0,
-    ABS_Y: 0,
-    ABS_BRAKE: 0,
-}
-class ControllerPosition:
+logger = logging.getLogger(__name__)
 
-    def __init__(self, x=None, y=None):
+CENTER_TOLERANCE = 0.1
+STICK_MAX = 65536
+
+class Position:
+
+    def __init__(self, x=None, y=None, z=None):
         self.x = x
         self.y = y
-
-    def as_dict(self) -> dict:
-        return {"x": self.x, "y": self.y}
+        self.z = z
 
     def as_array(self) -> np.ndarray:
-        return np.array([self.x, self.y])
+        return np.array([self.x, self.y, self.z])
 
-    @staticmethod
-    def normalize(v):
-        return v / STICK_MAX
+    def __str__(self):
+        return f"({self.x:,.2f}, {self.y:,.2f}, {self.z:,.2f})"
+
+
+class ControllerPosition:
+
+    def __init__(self):
+        self.left = Position(0, 0, 0)
+        self.right = Position(0, 0, 0)
+
+    def as_array(self) -> np.ndarray:
+        return np.vstack([self.left.as_array(), self.right.as_array()])
 
     def set(self, code, pos) -> None:
-        pos = self.normalize(pos)
-        if code == ABS_X:
-            self.x = pos
-        elif code == ABS_Y:
-            self.y = pos
+        self.left.z = 0
+        self.right.z = 0
+        if code in STICK_CONTROLS:
+            pos = (pos / STICK_MAX - 0.5) * 2
+
+            if abs(pos) < CENTER_TOLERANCE:
+                pos = 0
+
+            self.map_abs_controls(code, pos)
+        elif code in TRIGGER_CONTROLS:
+            pos = -pos / TRIGGER_MAX
+
+            if abs(pos) < CENTER_TOLERANCE:
+                pos = 0
+
+            if code == ABS_BRAKE:
+                self.left.z = pos
+            elif code == ABS_GAS:
+                self.right.z = pos
+
+        elif code in BUMPER_CONTROLS:
+            if code == BTN_TL:
+                self.left.z = 1
+            if code == BTN_TR:
+                self.right.z = 1
+
         else:
             pass
+
+    def map_abs_controls(self, code, pos):
+        if code == ABS_X:
+            self.left.x = pos
+        elif code == ABS_Y:
+            self.left.y = pos
+        elif code == ABS_BRAKE:
+            self.left.z = pos
+        elif code == ABS_Z:
+            self.right.x = pos
+        elif code == ABS_RZ:
+            self.right.y = pos
+
     def __str__(self):
-        return f"({self.x:,.2f}, {self.y:,.2f})"
+        return f"(Left: {self.left}, Right: {self.right})"
 
 
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
+ZEROPOSITION = Position(x=0, y=0, z=0).as_array()
 
-ZEROPOSITION = ControllerPosition(0, 0)
+def wait_to_get_devices(timeout=100, check_every=1) -> InputDevice:
+
+    start_time = time.time()
+
+    while True:
+        devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+
+        for device in devices:
+            if 'xbox' in device.name.lower():
+                logger.info('Found XBox controller!')
+                return device
+
+        if time.time() - start_time > timeout:
+            break
+
+        time.sleep(check_every)
+        logger.info(f"Couldn't find XBox controller. Trying again in {check_every} seconds...")
+
+
+    raise RuntimeError("Error: XBox controller not found.")
+
 
 def list_devices():
 
@@ -60,17 +126,21 @@ def list_devices():
 def controller_thread(dev: evdev.InputDevice, pos: ControllerPosition):
 
     for event in dev.read_loop():
-        # read stick axis movement
+
         if event.type == evdev.ecodes.EV_ABS:
+            # Sticks and triggers
+            if event.code in STICK_CONTROLS or event.code in TRIGGER_CONTROLS:
+                pos.set(event.code, event.value)
 
-            if event.code in [ABS_X, ABS_Y, ABS_BRAKE]:
+        if event.type == evdev.ecodes.EV_KEY:
+            # Buttons
+            if event.code in BUMPER_CONTROLS:
+                # Bumpers used for moving
+                pos.set(event.code, event.value)
 
-                value = event.value - center[event.code]
-
-                if abs(value) <= CENTER_TOLERANCE:
-                    value = 0
-
-                pos.set(event.code, value)
+            else:
+                # Other buttons for presets
+                pass
 
 
 

@@ -2,9 +2,12 @@
 import queue
 
 import evdev
+import numpy as np
 import serial
 import threading
 import time
+import logging
+
 # import keyboard
 
 import gcode
@@ -13,18 +16,19 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
+STICK_MULTIPLIER = 2
 
+logger = logging.getLogger(__name__)
 
 SPEED = 10000
 
 # Serial port settings
-SERIAL_PORT = '/dev/ttyACM0'  # Change this to your serial port
-BAUD_RATE = 250000
+SERIAL_PORTS = ['/dev/ttyACM0', '/dev/ttyACM1']  # Change this to your serial port
 HOME_FIRST = False
-TIMEOUT = 1
+
 
 # Controller settings
-CONTROLLER_NAME = '/dev/input/event4'
+CONTROLLER_NAME = None
 
 class Timer:
 
@@ -50,51 +54,52 @@ class Timer:
 
 
 # Main function
-def main():
+def main(debug=True):
     # Open serial port
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
+                        handlers=[
+                                logging.FileHandler("debug.log"),
+                                logging.StreamHandler()
+                        ])
 
-    with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=TIMEOUT) as ser:
+    arduinos = serial_connection.acquire_arduinos(SERIAL_PORTS)
 
+    if debug:
         # Start a thread to read data from the serial port
-        read_thread = threading.Thread(target=read_serial_thread,
-                                       args=(ser,),
-                                       daemon=True)
-        read_thread.start()
+        read_threads = []
+        for arduino in arduinos:
+            read_threads.append(threading.Thread(target=read_serial_thread,
+                                           args=(arduino,),
+                                           daemon=True))
+        [t.start() for t in read_threads]
 
-        pos = ControllerPosition(0, 0)
-        dev = evdev.InputDevice(CONTROLLER_NAME)
-        ctrl_thread = threading.Thread(target=controller.controller_thread,
-                                       args=(dev, pos),
-                                       daemon=True)
-        ctrl_thread.start()
+    pos = ControllerPosition()
+    dev = controller.wait_to_get_devices()
 
-        time.sleep(2) # Give arms time to setup
+    ctrl_thread = threading.Thread(target=controller.controller_thread,
+                                   args=(dev, pos),
+                                   daemon=True)
+    ctrl_thread.start()
 
-        if HOME_FIRST:
-            send_serial(ser, gcode.home())
+    time.sleep(2) # Give arms time to setup
 
-        # Set axes to relative mode
-        send_serial(ser, gcode.relative_positioning())
+    if HOME_FIRST:
+        serial_connection.send_serials(arduinos, gcode.home())
 
-        # Main loop to handle key presses
-        dir = 1
-        pos_prev = ZEROPOSITION
-        while True:
-            # if keyboard.is_pressed('q'):
-            #     print("Exiting...")
-            #     break
+    # Set axes to relative mode
+    serial_connection.send_serials(arduinos, gcode.relative_positioning())
 
-            # Get the pressed key
-            # key = keyboard.read_event(suppress=True)
-            # action = keyboard_callback(key)
+    # Main loop to handle key presses
+    while True:
 
-            v = pos.as_array()
-            v *= 2
-            v = v.round(3)
+        v = pos.as_array()
+        v *= STICK_MULTIPLIER
+        v = v.round(3)
 
-            if pos != ZEROPOSITION:
-                send_serial(ser, gcode.move(vector=v, order="xy", speed=SPEED))
-                send_serial(ser, gcode.relative_positioning())
+        for armpos, arduino in zip(v, arduinos):
+            if np.any(armpos != ZEROPOSITION):
+                send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
+                # send_serial(arduino, gcode.relative_positioning())
 
             time.sleep(0.01)
 

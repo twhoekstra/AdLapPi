@@ -25,7 +25,7 @@ def move(letter: str = "G", number: int = 0, **kwargs):
         elif len(vec) != len(order):
             raise ValueError(f"Error, vector length does not match length "
                              f"expected due to order setting: {order}. "
-                             f"Expected vector of length {len()} but got "
+                             f"Expected vector of length {len(vec)} but got "
                              f"{len(vec)}. Resolve this by chaning the order or "
                              f"the vector.")
 
