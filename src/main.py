@@ -34,7 +34,8 @@ def main(verbose=True,
          feedrate=None,
          speed=None,
          accel=None,
-         serial_period_ms=None):
+         serial_period_ms=None,
+         software_endstops=False):
 
     if feedrate is None:
         feedrate = FEEDRATE
@@ -92,7 +93,7 @@ def main(verbose=True,
 
         s += v
 
-        if ADLAP_LIMITS.check_array_outside_limit(s):
+        if software_endstops and ADLAP_LIMITS.check_array_outside_limit(s):
             s -= v
             logger.info("At limit")
             continue
@@ -121,10 +122,13 @@ if __name__ == "__main__":
                         type=int)
     parser.add_argument('-v', '--verbose',
                         action='store_true')
+    parser.add_argument('-e', '--software_endstops',
+                        action='store_true')
     args = parser.parse_args()
 
     main(verbose=args.verbose,
          feedrate=args.feedrate,
          speed=args.speed,
          accel=args.acceleration,
-         serial_period_ms=args.serial_period)
+         serial_period_ms=args.serial_period,
+         software_endstops=args.software_endstops)
