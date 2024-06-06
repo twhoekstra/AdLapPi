@@ -93,6 +93,7 @@ def main(debug=True):
 
     # Main loop to handle key presses
     s = np.zeros((2, 3))
+    v = np.zeros((2, 3))
     while True:
 
         for armpos, armvel, arduino in zip(s.round(3), v.round(3), arduinos):
