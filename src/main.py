@@ -95,8 +95,8 @@ def main(debug=True):
     s = np.zeros((2, 3))
     while True:
 
-        for armpos, arduino in zip(s.round(3), arduinos):
-            if np.any(armpos != ZEROPOSITION):
+        for armpos, armvel, arduino in zip(s.round(3), v.round(3), arduinos):
+            if np.any(armvel != ZEROPOSITION):
                 send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
                 # send_serial(arduino, gcode.relative_positioning())
                 time.sleep(0.01)
