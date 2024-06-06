@@ -16,7 +16,7 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
-SERIAL_PERIOD_MS = 20
+SERIAL_PERIOD_MS = 25
 SPEED = 1
 FEEDRATE = 10000
 ACCELERATION = 3000
