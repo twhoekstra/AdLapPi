@@ -1,4 +1,5 @@
 #  Copyright (c) 2024 Thijn Hoekstra
+import argparse
 import queue
 
 import evdev
@@ -18,7 +19,6 @@ from serial_connection import read_serial_thread, send_serial
 
 STICK_MULTIPLIER = 0.5
 
-logger = logging.getLogger(__name__)
 
 SPEED = 10000
 
@@ -29,6 +29,7 @@ HOME_FIRST = False
 
 # Controller settings
 CONTROLLER_NAME = None
+
 
 class Timer:
 
@@ -54,9 +55,13 @@ class Timer:
 
 
 # Main function
-def main(debug=True):
+def main(verbose=False, feedrate=None):
+
+    if feedrate is None:
+        feedrate = SPEED
+
     # Open serial port
-    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO,
+    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
                         handlers=[
                                 logging.FileHandler("debug.log"),
                                 logging.StreamHandler()
@@ -64,7 +69,7 @@ def main(debug=True):
 
     arduinos = serial_connection.acquire_arduinos(SERIAL_PORTS)
 
-    if debug:
+    if verbose:
         # Start a thread to read data from the serial port
         read_threads = []
         for arduino in arduinos:
@@ -98,7 +103,7 @@ def main(debug=True):
             if np.any(armvel != ZEROPOSITION):
                 send_serial(arduino, gcode.relative_positioning())
                 send_serial(arduino,
-                            gcode.move(vector=armvel, order="xyz", speed=SPEED))
+                            gcode.move(vector=armvel, order="xyz", speed=feedrate))
                 time.sleep(0.005)
 
         # pos.clear()
@@ -109,4 +114,12 @@ def main(debug=True):
 
 
 if __name__ == "__main__":
-    main()
+    logger = logging.getLogger(__name__)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--feedrate', help="Feedrate for stepper moves.",
+                        type=int)
+    parser.add_argument('-v', '--verbose',
+                        action='store_true')
+    args = parser.parse_args()
+
+    main(verbose=args.verbose, feedrate=args.feedrate)
