@@ -108,8 +108,6 @@ def main(verbose=True,
                 time.sleep(wait)
 
 
-        # print(s.flatten())
-
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser()
