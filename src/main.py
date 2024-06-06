@@ -91,6 +91,7 @@ def main(verbose=True,
         v = pos.as_array()
         v *= speed
 
+
         s += v
 
         if software_endstops and ADLAP_LIMITS.check_array_outside_limit(s):

@@ -89,7 +89,7 @@ class ControllerPosition:
         elif code == ABS_BRAKE:
             self.left.z = pos
         elif code == ABS_Z:
-            self.right.x = pos
+            self.right.x = -pos # Flipped
         elif code == ABS_RZ:
             self.right.y = pos
 
