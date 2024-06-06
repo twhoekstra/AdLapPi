@@ -92,7 +92,7 @@ def main(verbose=True,
 
         s += v
 
-        if ADLAP_LIMITS.check_array_in_limit(s):
+        if ADLAP_LIMITS.check_array_outside_limit(s):
             s -= v
             logger.info("At limit")
             continue
