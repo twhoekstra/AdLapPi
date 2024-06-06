@@ -46,6 +46,9 @@ def absolute_positioning():
 def software_endstops(on=True):
     return f"M211 {int(on)}\n"
 
+def set_acceleration(accel: int):
+    return f"M204 T{int(accel)}\n"
+
 def home(axes: Union[list, str] = None):
     if axes is None:
         return "G28"

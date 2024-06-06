@@ -17,19 +17,17 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
-STICK_MULTIPLIER = 0.5
-
-
-SPEED = 10000
+SERIAL_PERIOD_MS = 10
+SPEED = 1
+FEEDRATE = 10000
+ACCELERATION = 3000
 
 # Serial port settings
 SERIAL_PORTS = ['/dev/ttyACM0', '/dev/ttyACM1']  # Change this to your serial port
 HOME_FIRST = False
 
-
 # Controller settings
 CONTROLLER_NAME = None
-
 
 class Timer:
 
@@ -55,10 +53,11 @@ class Timer:
 
 
 # Main function
-def main(verbose=False, feedrate=None):
-
-    if feedrate is None:
-        feedrate = SPEED
+def main(verbose=False,
+         feedrate=FEEDRATE,
+         speed=SPEED,
+         accel=ACCELERATION,
+         serial_period_ms=SERIAL_PERIOD_MS):
 
     # Open serial port
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
@@ -97,6 +96,7 @@ def main(verbose=False, feedrate=None):
     # Main loop to handle key presses
     s = np.zeros((2, 3))
     v = np.zeros((2, 3))
+    wait = serial_period_ms / 1e3 / len(arduinos)
     while True:
 
         for armvel, arduino in zip(v.round(3), arduinos):
@@ -104,11 +104,11 @@ def main(verbose=False, feedrate=None):
                 send_serial(arduino, gcode.relative_positioning())
                 send_serial(arduino,
                             gcode.move(vector=armvel, order="xyz", speed=feedrate))
-                time.sleep(0.005)
+                time.sleep(wait)
 
         # pos.clear()
         v = pos.as_array()
-        v *= STICK_MULTIPLIER
+        v *= speed
 
         s += v
 
@@ -118,8 +118,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--feedrate', help="Feedrate for stepper moves.",
                         type=int)
+    parser.add_argument('-s', '--speed', help="Speed for moving with the joystick.",
+                        type=float)
+    parser.add_argument('-a', '--acceleration', help="Acceleration for stepper moves.",
+                        type=int)
+    parser.add_argument('-t', '--serial_period', help="Period of serial loop.",
+                        type=int)
     parser.add_argument('-v', '--verbose',
                         action='store_true')
     args = parser.parse_args()
 
-    main(verbose=args.verbose, feedrate=args.feedrate)
+    main(verbose=args.verbose,
+         feedrate=args.feedrate,
+         speed=args.speed,
+         accel=args.acceleration,
+         serial_period_ms=args.serial_period)
