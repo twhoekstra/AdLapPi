@@ -17,7 +17,7 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
-SERIAL_PERIOD_MS = 20
+SERIAL_PERIOD_MS = 40
 SPEED = 1
 FEEDRATE = 10000
 ACCELERATION = 3000
@@ -107,12 +107,13 @@ def main(verbose=False,
     # Main loop to handle key presses
     s = np.zeros((2, 3))
     v = np.zeros((2, 3))
-    wait = serial_period_ms / 1e3 / len(arduinos)
+    wait = serial_period_ms / 1e3 / len(arduinos) / 2
     while True:
 
         for armvel, arduino in zip(v.round(3), arduinos):
             if np.any(armvel != ZEROPOSITION):
                 send_serial(arduino, gcode.relative_positioning())
+                time.sleep(wait)
                 send_serial(arduino,
                             gcode.move(vector=armvel, order="xyz", speed=feedrate))
                 time.sleep(wait)
