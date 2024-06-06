@@ -45,8 +45,10 @@ class ControllerPosition:
         return np.vstack([self.left.as_array(), self.right.as_array()])
 
     def set(self, code, pos) -> None:
+        print(code)
         self.left.z = 0
         self.right.z = 0
+
         if code in STICK_CONTROLS:
             pos = (pos / STICK_MAX - 0.5) * 2
 
@@ -54,6 +56,7 @@ class ControllerPosition:
                 pos = 0
 
             self.map_abs_controls(code, pos)
+
         elif code in TRIGGER_CONTROLS:
             pos = -pos / TRIGGER_MAX
 

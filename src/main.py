@@ -16,11 +16,11 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
-STICK_MULTIPLIER = 2
+STICK_MULTIPLIER = 0.5
 
 logger = logging.getLogger(__name__)
 
-SPEED = 10000
+SPEED = 5000
 
 # Serial port settings
 SERIAL_PORTS = ['/dev/ttyACM0', '/dev/ttyACM1']  # Change this to your serial port
@@ -98,7 +98,6 @@ def main(debug=True):
         v = v.round(3)
 
         s += v
-        print(s.flatten())
 
         for armpos, arduino in zip(s, arduinos):
             if np.any(armpos != ZEROPOSITION):
