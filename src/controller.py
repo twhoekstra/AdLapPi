@@ -152,9 +152,6 @@ def controller_thread(dev: evdev.InputDevice, pos_queue: queue.Queue):
         pos_queue.put(pos)
 
 
-        time.sleep(0.001)
-
-
 
 
 
