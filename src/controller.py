@@ -1,5 +1,6 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 # Stick control code by Nick at https://stackoverflow.com/a/56419190
+import queue
 import time
 import logging
 from typing import List
@@ -130,7 +131,8 @@ def list_devices():
         print(device.path, device.name, device.phys)
 
 
-def controller_thread(dev: evdev.InputDevice, pos: ControllerPosition):
+def controller_thread(dev: evdev.InputDevice, pos_queue: queue.Queue):
+    pos = ControllerPosition()
 
     for event in dev.read_loop():
 
@@ -138,18 +140,19 @@ def controller_thread(dev: evdev.InputDevice, pos: ControllerPosition):
             # Sticks and triggers
             if event.code in STICK_CONTROLS or event.code in TRIGGER_CONTROLS:
                 pos.set(event.code, event.value)
-
-        if event.type == evdev.ecodes.EV_KEY:
+        elif event.type == evdev.ecodes.EV_KEY:
             # Buttons
             if event.code in BUMPER_CONTROLS:
                 # Bumpers used for moving
                 pos.set(event.code, event.value)
+        else:
+            # Other buttons for presets
+            continue
 
-            else:
-                # Other buttons for presets
-                pass
+        pos_queue.put(pos)
 
-        time.sleep(0.01)
+
+        # time.sleep(0.01)
 
 
 

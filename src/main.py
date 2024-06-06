@@ -1,5 +1,6 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 import argparse
+import copy
 import queue
 
 import evdev
@@ -89,8 +90,9 @@ def main(verbose=False,
     pos = ControllerPosition()
     dev = controller.wait_to_get_devices()
 
+    pos_queue = queue.Queue()
     ctrl_thread = threading.Thread(target=controller.controller_thread,
-                                   args=(dev, pos),
+                                   args=(dev, pos_queue),
                                    daemon=True)
     ctrl_thread.start()
 
@@ -108,6 +110,7 @@ def main(verbose=False,
     s = np.zeros((2, 3))
     v = np.zeros((2, 3))
     wait = serial_period_ms / 1e3 / len(arduinos) / 2
+
     while True:
 
         for armvel, arduino in zip(v.round(3), arduinos):
@@ -118,7 +121,7 @@ def main(verbose=False,
                             gcode.move(vector=armvel, order="xyz", speed=feedrate))
                 time.sleep(wait)
 
-        # pos.clear()
+        pos = pos_queue.get()
         v = pos.as_array()
         v *= speed
 
