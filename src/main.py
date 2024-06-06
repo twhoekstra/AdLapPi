@@ -17,7 +17,7 @@ from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
 
-SERIAL_PERIOD_MS = 10
+SERIAL_PERIOD_MS = 20
 SPEED = 1
 FEEDRATE = 10000
 ACCELERATION = 3000
@@ -123,6 +123,7 @@ def main(verbose=False,
 
         s += v
 
+        print(s)
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ if __name__ == "__main__":
                         type=float)
     parser.add_argument('-a', '--acceleration', help="Acceleration for stepper moves.",
                         type=int)
-    parser.add_argument('-t', '--serial_period', help="Period of serial loop.",
+    parser.add_argument('-t', '--serial_period', help="Period of serial loop in milliseconds.",
                         type=int)
     parser.add_argument('-v', '--verbose',
                         action='store_true')
