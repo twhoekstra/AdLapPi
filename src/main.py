@@ -98,7 +98,7 @@ def main(debug=True):
             if np.any(armvel != ZEROPOSITION):
                 send_serial(arduino, gcode.relative_positioning())
                 send_serial(arduino,
-                            gcode.move(vector=armpos, order="xyz", speed=SPEED))
+                            gcode.move(vector=armvel, order="xyz", speed=SPEED))
                 time.sleep(0.005)
 
         # pos.clear()
