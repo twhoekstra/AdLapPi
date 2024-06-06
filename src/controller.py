@@ -29,7 +29,7 @@ class Position:
         self.z = z
 
     def as_array(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.z])
+        return np.array([self.x, self.y, self.z], dtype=np.float64)
 
     def __str__(self):
         return f"({self.x:,.2f}, {self.y:,.2f}, {self.z:,.2f})"
@@ -42,7 +42,7 @@ class ControllerPosition:
         self.right = Position(0, 0, 0)
 
     def as_array(self) -> np.ndarray:
-        return np.vstack([self.left.as_array(), self.right.as_array()])
+        return np.vstack([self.left.as_array(), self.right.as_array()], dtype=np.float64)
 
     def set(self, code, pos) -> None:
         print(code)
