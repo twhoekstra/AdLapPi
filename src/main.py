@@ -54,10 +54,19 @@ class Timer:
 
 # Main function
 def main(verbose=False,
-         feedrate=FEEDRATE,
-         speed=SPEED,
-         accel=ACCELERATION,
-         serial_period_ms=SERIAL_PERIOD_MS):
+         feedrate=None,
+         speed=None,
+         accel=None,
+         serial_period_ms=None):
+
+    if feedrate is None:
+        feedrate = FEEDRATE
+    if speed is None:
+        speed = SPEED
+    if accel is None:
+        accel = ACCELERATION
+    if serial_period_ms is None:
+        serial_period_ms = SERIAL_PERIOD_MS
 
     # Open serial port
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
@@ -92,6 +101,8 @@ def main(verbose=False,
 
     # Set axes to relative mode
     # serial_connection.send_serials(arduinos, gcode.relative_positioning())
+
+    serial_connection.send_serials(arduinos, gcode.set_acceleration(accel))
 
     # Main loop to handle key presses
     s = np.zeros((2, 3))

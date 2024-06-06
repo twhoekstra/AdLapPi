@@ -57,6 +57,11 @@ pair 40:8E:2C:4E:4F:01
 quit
 ```
 
+
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+
+cd AdLapPi
+source .venv/bin/activate
+python src/main.py 
