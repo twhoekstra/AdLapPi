@@ -90,7 +90,7 @@ def main(debug=True):
     # serial_connection.send_serials(arduinos, gcode.relative_positioning())
 
     # Main loop to handle key presses
-    s = ControllerPosition().as_array()
+    s = np.zeros((2, 3))
     while True:
 
         v = pos.as_array()
@@ -98,7 +98,7 @@ def main(debug=True):
         v = v.round(3)
 
         s += v
-        print(s)
+        print(s.flatten())
 
         for armpos, arduino in zip(s, arduinos):
             if np.any(armpos != ZEROPOSITION):
