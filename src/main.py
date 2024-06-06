@@ -98,8 +98,9 @@ def main(debug=True):
                 send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
                 # send_serial(arduino, gcode.relative_positioning())
 
+        # pos.clear()
         v = pos.as_array()
-        pos.clear()
+
         v *= STICK_MULTIPLIER
         v = v.round(3)
 
