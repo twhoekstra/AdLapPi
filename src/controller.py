@@ -149,7 +149,7 @@ def controller_thread(dev: evdev.InputDevice, pos: ControllerPosition):
                 # Other buttons for presets
                 pass
 
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 
 
