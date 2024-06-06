@@ -87,16 +87,20 @@ def main(debug=True):
         serial_connection.send_serials(arduinos, gcode.home())
 
     # Set axes to relative mode
-    serial_connection.send_serials(arduinos, gcode.relative_positioning())
+    # serial_connection.send_serials(arduinos, gcode.relative_positioning())
 
     # Main loop to handle key presses
+    s = ControllerPosition().as_array()
     while True:
 
         v = pos.as_array()
         v *= STICK_MULTIPLIER
         v = v.round(3)
 
-        for armpos, arduino in zip(v, arduinos):
+        s += v
+        print(s)
+
+        for armpos, arduino in zip(s, arduinos):
             if np.any(armpos != ZEROPOSITION):
                 send_serial(arduino, gcode.move(vector=armpos, order="xyz", speed=SPEED))
                 # send_serial(arduino, gcode.relative_positioning())
