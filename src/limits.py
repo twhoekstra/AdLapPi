@@ -44,6 +44,8 @@ class BothLimits:
         ])
 
     def check_array_outside_limit(self, a):
+        print(a, self._min_array)
+        print(a, self._max_array)
         if np.any(np.less(a, self._min_array)):
             return True
         elif np.any(np.greater(a, self._max_array)):
