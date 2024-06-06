@@ -1,10 +1,7 @@
 #  Copyright (c) 2024 Thijn Hoekstra
 import argparse
-import queue
 
-import evdev
 import numpy as np
-import serial
 import threading
 import time
 import logging
@@ -13,6 +10,8 @@ import logging
 
 import gcode
 import controller
+import limits
+from limits import ADLAP_LIMITS
 from controller import ControllerPosition, ZEROPOSITION
 import serial_connection
 from serial_connection import read_serial_thread, send_serial
@@ -29,31 +28,9 @@ HOME_FIRST = False
 # Controller settings
 CONTROLLER_NAME = None
 
-class Timer:
-
-    def __init__(self, interval=1):
-        self.prev = None
-        self.interval = interval
-
-    def start(self):
-        self.prev = time.time()
-        return self
-
-    def __call__(self):
-        if self.prev is None:
-            raise RuntimeError("The timer has not been started yet")
-
-        current = time.time()
-        if current - self.prev > self.interval:
-            self.prev = current
-            return True
-        else:
-            return False
-
-
 
 # Main function
-def main(verbose=False,
+def main(verbose=True,
          feedrate=None,
          speed=None,
          accel=None,
@@ -110,6 +87,18 @@ def main(verbose=False,
     wait = serial_period_ms / 1e3 / len(arduinos) / 2
     while True:
 
+        v = pos.as_array()
+        v *= speed
+
+        s += v
+
+        if ADLAP_LIMITS.check_array_in_limit(s):
+            s -= v
+            logger.info("At limit")
+            continue
+
+
+
         for armvel, arduino in zip(v.round(3), arduinos):
             if np.any(armvel != ZEROPOSITION):
                 send_serial(arduino, gcode.relative_positioning())
@@ -118,11 +107,6 @@ def main(verbose=False,
                             gcode.move(vector=armvel, order="xyz", speed=feedrate))
                 time.sleep(wait)
 
-        # pos.clear()
-        v = pos.as_array()
-        v *= speed
-
-        s += v
 
         print(s)
 
