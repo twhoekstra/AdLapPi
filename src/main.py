@@ -82,7 +82,7 @@ def main(verbose=True,
     serial_connection.send_serials(arduinos, gcode.set_acceleration(accel))
 
     # Main loop to handle key presses
-    s = np.zeros((2, 3))
+    s = ADLAP_LIMITS.get_home_array()
     v = np.zeros((2, 3))
     wait = serial_period_ms / 1e3 / len(arduinos) / 2
     while True:

@@ -9,6 +9,9 @@ class Limit:
         self.max = end
         self.home_to_min = home_to_min
 
+    def get_home(self):
+        return self.min if self.home_to_min else self.max
+
 
 class ArmLimits:
 
@@ -42,6 +45,12 @@ class BothLimits:
             [self.left.x.max, self.left.y.max, self.left.z.max, ],
             [self.right.x.max, self.right.y.max, self.right.z.max, ],
         ])
+
+    def get_home_array(self):
+        return np.array([
+            [self.left.x.get_home(), self.left.y.get_home(), self.left.z.get_home(), ],
+            [self.right.x.get_home(), self.right.y.get_home(), self.right.z.get_home(), ],
+        ], dtype=np.float64)
 
     def check_array_outside_limit(self, a):
         print(a, self._min_array)
