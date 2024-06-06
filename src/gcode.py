@@ -43,6 +43,9 @@ def relative_positioning():
 def absolute_positioning():
     return "G90\n"
 
+def software_endstops(on=True):
+    return f"M211 {int(on)}\n"
+
 def home(axes: Union[list, str] = None):
     if axes is None:
         return "G28"

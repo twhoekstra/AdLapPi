@@ -74,9 +74,9 @@ class ControllerPosition:
 
         elif code in BUMPER_CONTROLS:
             if code == BTN_TL:
-                self.left.z = 1
+                self.left.z = pos
             if code == BTN_TR:
-                self.right.z = 1
+                self.right.z = pos
 
         else:
             pass
